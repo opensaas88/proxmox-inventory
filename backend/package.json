@@ -1,0 +1,15 @@
+{
+  "name": "pve-inventory-api",
+  "version": "1.0.0",
+  "description": "Proxmox VE Inventory - Backend API Proxy",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

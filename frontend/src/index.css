@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+  }
+  body {
+    font-family: "DM Sans", system-ui, sans-serif;
+    background: #0a0f1a;
+    min-height: 100vh;
+  }
+  ::selection {
+    background: rgba(14, 148, 173, 0.3);
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/[0.025] backdrop-blur-sm border border-white/[0.06] rounded-xl;
+  }
+  .glass-panel-hover {
+    @apply glass-panel transition-all duration-200 hover:bg-white/[0.04] hover:border-white/[0.1];
+  }
+  .data-cell {
+    @apply font-mono text-xs tabular-nums;
+  }
+  .section-title {
+    @apply text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500;
+  }
+  .metric-value {
+    @apply text-2xl font-bold tracking-tight font-display;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-pve-400 to-cyan-400;
+  }
+  .bg-grid {
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .animate-stagger-1 { animation-delay: 0.05s; }
+  .animate-stagger-2 { animation-delay: 0.1s; }
+  .animate-stagger-3 { animation-delay: 0.15s; }
+  .animate-stagger-4 { animation-delay: 0.2s; }
+}
