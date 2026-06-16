@@ -5,7 +5,7 @@
 @layer base {
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+    scrollbar-color: rgba(15, 23, 42, 0.15) transparent;
   }
   *::-webkit-scrollbar {
     width: 6px;
@@ -15,46 +15,44 @@
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(15, 23, 42, 0.15);
     border-radius: 3px;
   }
   body {
     font-family: "DM Sans", system-ui, sans-serif;
-    background: #0a0f1a;
+    background: #f4f5f7;
+    color: #0f172a;
     min-height: 100vh;
   }
   ::selection {
-    background: rgba(14, 148, 173, 0.3);
+    background: rgba(16, 185, 129, 0.18);
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-white/[0.025] backdrop-blur-sm border border-white/[0.06] rounded-xl;
+    @apply bg-white border border-slate-200/80 rounded-2xl shadow-sm;
   }
   .glass-panel-hover {
-    @apply glass-panel transition-all duration-200 hover:bg-white/[0.04] hover:border-white/[0.1];
+    @apply glass-panel transition-all duration-200 hover:shadow-md hover:border-slate-300;
   }
   .data-cell {
     @apply font-mono text-xs tabular-nums;
   }
   .section-title {
-    @apply text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500;
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400;
   }
   .metric-value {
-    @apply text-2xl font-bold tracking-tight font-display;
+    @apply text-2xl font-bold tracking-tight font-display text-slate-900;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-pve-400 to-cyan-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-green-400;
   }
-  .bg-grid {
-    background-image: 
-      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-    background-size: 40px 40px;
+  .bg-app {
+    background-color: #f4f5f7;
   }
   .animate-stagger-1 { animation-delay: 0.05s; }
   .animate-stagger-2 { animation-delay: 0.1s; }
