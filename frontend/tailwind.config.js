@@ -8,18 +8,20 @@ export default {
         mono: ['"IBM Plex Mono"', '"Fira Code"', "monospace"],
       },
       colors: {
+        // OpenSaaS brand green (emerald). Kept under the `pve` key so existing
+        // utility classes (pve-400, pve-500, …) simply switch hue.
         pve: {
-          50: "#f0fafb",
-          100: "#d0eff4",
-          200: "#a1dfe9",
-          300: "#6ac8d9",
-          400: "#3eadc4",
-          500: "#0e94ad",
-          600: "#0b778e",
-          700: "#0d6073",
-          800: "#114f5f",
-          900: "#0f3d4a",
-          950: "#062832",
+          50: "#ecfdf5",
+          100: "#d1fae5",
+          200: "#a7f3d0",
+          300: "#6ee7b7",
+          400: "#34d399",
+          500: "#10b981",
+          600: "#059669",
+          700: "#047857",
+          800: "#065f46",
+          900: "#064e3b",
+          950: "#022c22",
         },
       },
       animation: {
