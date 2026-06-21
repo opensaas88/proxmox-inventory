@@ -17,8 +17,11 @@ nœuds, machines virtuelles, conteneurs et ressources — au look & feel **OpenS
 - **KPI globaux** : VMs actives/totales, vCPU alloués vs cœurs physiques, RAM, stockage, uptime moyen.
 - **Cartes par nœud** : statut, charge CPU/RAM, nombre de VMs.
 - **Inventaire des VMs** : recherche, filtres (état, nœud, templates), tri multi-colonnes, panneau de détail, export **CSV**.
-- **Analytique** : distribution des OS, allocation par nœud, RAM/stockage par VM, récapitulatif et ratios de sur-allocation.
-- **Enrichissement via QEMU Guest Agent** : OS détecté et interfaces réseau (si l'agent est installé).
+- **Conteneurs LXC** : onglet dédié listant les conteneurs du cluster.
+- **Stockage** : cartes d'utilisation par datastore (used/total, espace dispo).
+- **Analytique** : distribution des OS, allocation par nœud, RAM/stockage par VM, récapitulatif et ratios de sur-allocation (chargé à la demande / *lazy*).
+- **Auto-refresh** configurable (Off / 30s / 1m / 5m).
+- **Enrichissement via QEMU Guest Agent** : OS détecté et interfaces réseau/IP (si l'agent est installé), affichées dans le détail de la VM.
 
 ---
 
@@ -70,12 +73,14 @@ cp .env .env.local   # puis éditer si besoin
 docker compose up -d --build
 ```
 
-L'interface est disponible sur **http://localhost:8080**.
+L'interface est disponible sur **http://localhost:8080**. Le backend n'est pas
+publié sur l'hôte : il est joint par Nginx via le réseau Docker interne.
 
-| Variable   | Défaut | Rôle |
-|------------|--------|------|
-| `UI_PORT`  | `8080` | Port HTTP de l'interface (Nginx) |
-| `API_PORT` | `3001` | Port du backend exposé sur l'hôte |
+| Variable           | Défaut  | Rôle |
+|--------------------|---------|------|
+| `UI_PORT`          | `8080`  | Port HTTP de l'interface (Nginx) |
+| `PVE_TLS_INSECURE` | `true`  | `false` pour exiger un certificat TLS Proxmox valide |
+| `ALLOWED_ORIGIN`   | *(vide)*| Restreint CORS à une origine (recommandé en prod) |
 
 ---
 

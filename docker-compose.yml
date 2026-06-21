@@ -8,11 +8,17 @@ services:
       dockerfile: Dockerfile
     container_name: pve-inventory-api
     restart: unless-stopped
-    ports:
-      - "${API_PORT:-3001}:3001"
+    # Not published on the host: the frontend reaches it over the internal
+    # Docker network via Nginx (/api). Expose only to linked services.
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
+      # Enforce strict TLS toward Proxmox (set to "false"/unset for self-signed)
+      - PVE_TLS_INSECURE=${PVE_TLS_INSECURE:-true}
+      # Restrict CORS in production, e.g. https://inventory.example.com
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-}
     networks:
       - pve-net
     healthcheck:

@@ -7,6 +7,23 @@ Légende effort : 🟢 faible · 🟡 moyen · 🔴 élevé.
 
 ---
 
+## ✅ Déjà livré (quick wins)
+
+- **#2 CORS restreignable** via `ALLOWED_ORIGIN`.
+- **#3 Backend non publié sur l'hôte** (joint par Nginx en réseau interne).
+- **#5 En-têtes de sécurité Nginx** (X-Frame-Options, nosniff, Referrer-Policy, CSP).
+- **#8 Code-splitting** : onglet *Analytique* en `lazy`/`Suspense` → bundle initial
+  **572 kB → 182 kB** (Recharts isolé, chargé à la demande).
+- **#11 Mémoïsation** des données du graphe RAM/stockage par VM.
+- **#17 Conteneurs LXC** affichés (onglet dédié).
+- **#18 Stockage** affiché (cartes d'utilisation par datastore).
+- **#19 Interfaces réseau / IP** dans le détail VM.
+- **#20 Auto-refresh** configurable (Off / 30s / 1m / 5m).
+- **#1 (partiel)** TLS Proxmox configurable via `PVE_TLS_INSECURE` (le passage à un
+  agent HTTPS *par requête* reste à faire — voir ci-dessous).
+
+---
+
 ## 🔒 Sécurité (prioritaire)
 
 ### 1. Ne pas désactiver la vérification TLS globalement 🟡

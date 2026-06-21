@@ -1,14 +1,20 @@
 import express from "express";
 import cors from "cors";
 
-// Allow self-signed certificates (standard for Proxmox VE)
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+// TLS verification toward Proxmox. Self-signed certs are standard on PVE, so
+// verification is disabled by default. Set PVE_TLS_INSECURE=false to enforce
+// strict TLS (recommended when Proxmox uses a trusted/ACME certificate).
+const PVE_TLS_INSECURE = process.env.PVE_TLS_INSECURE !== "false";
+if (PVE_TLS_INSECURE) process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(express.json());
+// Restrict CORS to a single origin when ALLOWED_ORIGIN is set (recommended in
+// production); otherwise stay permissive for local/dev use.
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN;
+app.use(cors(ALLOWED_ORIGIN ? { origin: ALLOWED_ORIGIN } : {}));
+app.use(express.json({ limit: "64kb" }));
 
 // ── Proxmox API helper ──────────────────────────────────────
 async function pveRequest(baseUrl, path, token) {
