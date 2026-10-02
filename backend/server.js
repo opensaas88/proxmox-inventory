@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
 
-// Allow self-signed certificates (standard for Proxmox VE)
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+// Keep TLS verification enabled. Trust your Proxmox CA with NODE_EXTRA_CA_CERTS.
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || "127.0.0.1";
 
 app.use(cors());
 app.use(express.json());
@@ -15,10 +15,10 @@ async function pveRequest(baseUrl, path, token) {
   const url = `${baseUrl}${path}`;
   const res = await fetch(url, {
     headers: { Authorization: `PVEAPIToken=${token}` },
+    signal: AbortSignal.timeout(15000),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Proxmox ${res.status}: ${text}`);
+    throw new Error(`Proxmox HTTP ${res.status}`);
   }
   const json = await res.json();
   return json.data;
@@ -60,6 +60,7 @@ app.post("/api/inventory", async (req, res) => {
   const token = `${tokenId}=${tokenSecret}`;
 
   try {
+    const warnings = [];
     // 1. Fetch nodes
     const nodesRaw = await pveRequest(baseUrl, "/nodes", token);
     const nodes = nodesRaw.map((n) => ({
@@ -81,6 +82,7 @@ app.post("/api/inventory", async (req, res) => {
           const vms = await pveRequest(baseUrl, `/nodes/${n.node}/qemu`, token);
           return { node: n.node, vms: vms || [] };
         } catch {
+          warnings.push(`${n.node} : liste des VM indisponible.`);
           return { node: n.node, vms: [] };
         }
       })
@@ -106,7 +108,7 @@ app.post("/api/inventory", async (req, res) => {
             );
             ostype = ostype || cfg.ostype || "";
             description = cfg.description || "";
-          } catch {}
+          } catch { warnings.push(`${node}/VM ${vm.vmid} : configuration indisponible.`); }
 
           // Fetch agent OS info (only if running)
           if (vm.status === "running") {
@@ -117,7 +119,7 @@ app.post("/api/inventory", async (req, res) => {
               );
               const r = osInfo?.result || osInfo;
               agentOs = r?.["pretty-name"] || r?.name || "";
-            } catch {}
+            } catch { warnings.push(`${node}/VM ${vm.vmid} : OS invité indisponible (agent ou permissions).`); }
 
             // Fetch network interfaces
             try {
@@ -132,7 +134,7 @@ app.post("/api/inventory", async (req, res) => {
                   name: i.name,
                   ips: (i["ip-addresses"] || []).map((ip) => ip["ip-address"]).filter(Boolean),
                 }));
-            } catch {}
+            } catch { warnings.push(`${node}/VM ${vm.vmid} : interfaces invité indisponibles.`); }
           }
 
           return {
@@ -165,6 +167,7 @@ app.post("/api/inventory", async (req, res) => {
           const cts = await pveRequest(baseUrl, `/nodes/${n.node}/lxc`, token);
           return { node: n.node, containers: cts || [] };
         } catch {
+          warnings.push(`${n.node} : liste des conteneurs indisponible.`);
           return { node: n.node, containers: [] };
         }
       })
@@ -209,6 +212,7 @@ app.post("/api/inventory", async (req, res) => {
             })),
           };
         } catch {
+          warnings.push(`${n.node} : stockages indisponibles.`);
           return { node: n.node, storages: [] };
         }
       })
@@ -220,6 +224,7 @@ app.post("/api/inventory", async (req, res) => {
       vms: allVms,
       containers: allContainers,
       storage: storageByNode,
+      warnings,
     });
   } catch (err) {
     res.status(502).json({ error: `Inventaire échoué : ${err.message}` });
@@ -227,6 +232,6 @@ app.post("/api/inventory", async (req, res) => {
 });
 
 // ── Start ───────────────────────────────────────────────────
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, HOST, () => {
   console.log(`✔ PVE Inventory API listening on :${PORT}`);
 });

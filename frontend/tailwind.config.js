@@ -8,6 +8,8 @@ export default {
         mono: ['"IBM Plex Mono"', '"Fira Code"', "monospace"],
       },
       colors: {
+        white: "rgb(var(--surface) / <alpha-value>)",
+        slate: Object.fromEntries([50,100,200,300,400,500,600,700,800,900].map(n => [n, `rgb(var(--slate-${n}) / <alpha-value>)`])),
         // OpenSaaS brand green (emerald). Kept under the `pve` key so existing
         // utility classes (pve-400, pve-500, …) simply switch hue.
         pve: {

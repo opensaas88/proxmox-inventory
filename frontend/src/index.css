@@ -20,8 +20,8 @@
   }
   body {
     font-family: "DM Sans", system-ui, sans-serif;
-    background: #f4f5f7;
-    color: #0f172a;
+    background: var(--app-bg);
+    color: rgb(var(--slate-900));
     min-height: 100vh;
   }
   ::selection {
@@ -52,10 +52,65 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-green-400;
   }
   .bg-app {
-    background-color: #f4f5f7;
+    background-color: var(--app-bg);
   }
   .animate-stagger-1 { animation-delay: 0.05s; }
   .animate-stagger-2 { animation-delay: 0.1s; }
   .animate-stagger-3 { animation-delay: 0.15s; }
   .animate-stagger-4 { animation-delay: 0.2s; }
 }
+
+:root {
+  color-scheme: light;
+  --app-bg: #f4f5f7; --surface: 255 255 255;
+  --slate-50: 248 250 252; --slate-100: 241 245 249; --slate-200: 226 232 240;
+  --slate-300: 203 213 225; --slate-400: 100 116 139; --slate-500: 100 116 139;
+  --slate-600: 71 85 105; --slate-700: 51 65 85; --slate-800: 30 41 59; --slate-900: 15 23 42;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #090d14; --surface: 17 24 39;
+  --slate-50: 22 31 47; --slate-100: 30 41 59; --slate-200: 51 65 85;
+  --slate-300: 71 85 105; --slate-400: 148 163 184; --slate-500: 163 177 198;
+  --slate-600: 190 202 219; --slate-700: 210 220 234; --slate-800: 226 232 240; --slate-900: 241 245 249;
+}
+/* White text on solid action buttons stays white in both themes. */
+.text-white { color: #fff; }
+.theme-bar { display: flex; justify-content: flex-end; padding: .65rem 1.5rem; background: rgb(var(--surface)); border-bottom: 1px solid rgb(var(--slate-200)); }
+.theme-control { display: flex; align-items: center; gap: .65rem; font-size: .8rem; color: rgb(var(--slate-600)); }
+.theme-control select, .planner-input { background: rgb(var(--surface)); border: 1px solid rgb(var(--slate-300)); border-radius: .5rem; padding: .5rem .75rem; color: rgb(var(--slate-900)); }
+.planner-input { display: block; width: 100%; }
+.action-button { padding: .65rem 1rem; border-radius: .6rem; background: #047857; color: white; font-size: .875rem; font-weight: 600; }
+.action-button:disabled { opacity: .5; cursor: not-allowed; }
+.notice { padding: .9rem 1rem; border: 1px solid rgb(var(--slate-300)); border-radius: .75rem; background: rgb(var(--surface)); color: rgb(var(--slate-700)); font-size: .875rem; }
+.notice-error { border-color: #ef4444; }
+:focus-visible { outline: 2px solid #10b981; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+:root[data-theme="dark"] [class~="bg-emerald-50"], :root[data-theme="dark"] [class~="bg-emerald-100"], :root[data-theme="dark"] [class~="bg-emerald-50/70"] { background-color: rgb(52 211 153 / .10); }
+:root[data-theme="dark"] .text-emerald-500 { color: rgb(52 211 153); }
+:root[data-theme="dark"] .text-emerald-600 { color: rgb(52 211 153); }
+:root[data-theme="dark"] .text-emerald-700 { color: rgb(52 211 153); }
+:root[data-theme="dark"] [class~="bg-sky-50"], :root[data-theme="dark"] [class~="bg-sky-100"], :root[data-theme="dark"] [class~="bg-sky-50/70"] { background-color: rgb(56 189 248 / .10); }
+:root[data-theme="dark"] .text-sky-500 { color: rgb(56 189 248); }
+:root[data-theme="dark"] .text-sky-600 { color: rgb(56 189 248); }
+:root[data-theme="dark"] .text-sky-700 { color: rgb(56 189 248); }
+:root[data-theme="dark"] [class~="bg-violet-50"], :root[data-theme="dark"] [class~="bg-violet-100"], :root[data-theme="dark"] [class~="bg-violet-50/70"] { background-color: rgb(167 139 250 / .10); }
+:root[data-theme="dark"] .text-violet-500 { color: rgb(167 139 250); }
+:root[data-theme="dark"] .text-violet-600 { color: rgb(167 139 250); }
+:root[data-theme="dark"] .text-violet-700 { color: rgb(167 139 250); }
+:root[data-theme="dark"] [class~="bg-amber-50"], :root[data-theme="dark"] [class~="bg-amber-100"], :root[data-theme="dark"] [class~="bg-amber-50/70"] { background-color: rgb(251 191 36 / .10); }
+:root[data-theme="dark"] .text-amber-500 { color: rgb(251 191 36); }
+:root[data-theme="dark"] .text-amber-600 { color: rgb(251 191 36); }
+:root[data-theme="dark"] .text-amber-700 { color: rgb(251 191 36); }
+:root[data-theme="dark"] [class~="bg-rose-50"], :root[data-theme="dark"] [class~="bg-rose-100"], :root[data-theme="dark"] [class~="bg-rose-50/70"] { background-color: rgb(251 113 133 / .10); }
+:root[data-theme="dark"] .text-rose-500 { color: rgb(251 113 133); }
+:root[data-theme="dark"] .text-rose-600 { color: rgb(251 113 133); }
+:root[data-theme="dark"] .text-rose-700 { color: rgb(251 113 133); }
+:root[data-theme="dark"] [class~="bg-red-50"], :root[data-theme="dark"] [class~="bg-red-100"], :root[data-theme="dark"] [class~="bg-red-50/70"] { background-color: rgb(248 113 113 / .10); }
+:root[data-theme="dark"] .text-red-500 { color: rgb(248 113 113); }
+:root[data-theme="dark"] .text-red-600 { color: rgb(248 113 113); }
+:root[data-theme="dark"] .text-red-700 { color: rgb(248 113 113); }
+:root[data-theme="dark"] [class~="bg-green-50"], :root[data-theme="dark"] [class~="bg-green-100"], :root[data-theme="dark"] [class~="bg-green-50/70"] { background-color: rgb(74 222 128 / .10); }
+:root[data-theme="dark"] .text-green-500 { color: rgb(74 222 128); }
+:root[data-theme="dark"] .text-green-600 { color: rgb(74 222 128); }
+:root[data-theme="dark"] .text-green-700 { color: rgb(74 222 128); }

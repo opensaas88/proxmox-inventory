@@ -1,4 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
+import ThemeControl from "./components/ThemeControl";
+import MigrationPlanner from "./components/MigrationPlanner";
+import { csvCell, downloadFile } from "./lib/migration";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, Legend,
@@ -77,7 +80,7 @@ const DEMO = {
     { vmid: 999, name: "tpl-ubuntu-2204", status: "stopped", node: "pve-node01", maxmem: 2147483648, maxdisk: 32212254720, cpus: 2, uptime: 0, ostype: "l26", template: 1, tags: "template", netin: 0, netout: 0, agent_os: "Ubuntu 22.04.3 LTS" },
     { vmid: 998, name: "tpl-debian-12", status: "stopped", node: "pve-node01", maxmem: 2147483648, maxdisk: 32212254720, cpus: 2, uptime: 0, ostype: "l26", template: 1, tags: "template", netin: 0, netout: 0, agent_os: "Debian 12 (Bookworm)" },
   ],
-  containers: [],
+  containers: [{ vmid: 400, name: "dns-cache", node: "pve-node03", type: "lxc", status: "running", cpus: 1, maxmem: 536870912, maxdisk: 8589934592 }],
   storage: [],
 };
 
@@ -151,15 +154,9 @@ function ChartTooltip({ active, payload, label }) {
 function exportCsv(vms) {
   const header = "VMID;Nom;Etat;Noeud;OS;vCPU;RAM (GiB);Disque (GiB);Uptime;Tags\n";
   const rows = vms.map((v) =>
-    [v.vmid, v.name, v.status, v.node, v.agent_os || "", v.cpus, toGiB(v.maxmem), toGiB(v.maxdisk), formatUptime(v.uptime), v.tags || ""].join(";")
+    [v.vmid, v.name, v.status, v.node, v.agent_os || "", v.cpus, toGiB(v.maxmem), toGiB(v.maxdisk), formatUptime(v.uptime), v.tags || ""].map(csvCell).join(";")
   ).join("\n");
-  const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `proxmox-inventory-${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadFile(`proxmox-inventory-${new Date().toISOString().slice(0, 10)}.csv`, "\uFEFF" + header + rows, "text/csv;charset=utf-8;");
 }
 
 // ── Connection Screen ───────────────────────────────────────
@@ -192,23 +189,23 @@ function ConnectionScreen({ onConnect, loading, error }) {
         <div className="glass-panel p-6 space-y-5">
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="section-title mb-1.5 block">Hôte / IP</label>
-              <input type="text" value={host} onChange={(e) => setHost(e.target.value)} placeholder="192.168.1.100" className={inputClass} />
+              <label htmlFor="host" className="section-title mb-1.5 block">Hôte / IP</label>
+              <input type="text" id="host" value={host} onChange={(e) => setHost(e.target.value)} placeholder="192.168.1.100" className={inputClass} />
             </div>
             <div className="w-20">
-              <label className="section-title mb-1.5 block">Port</label>
-              <input type="text" value={port} onChange={(e) => setPort(e.target.value)} className={`${inputClass} text-center`} />
+              <label htmlFor="port" className="section-title mb-1.5 block">Port</label>
+              <input type="text" id="port" value={port} onChange={(e) => setPort(e.target.value)} className={`${inputClass} text-center`} />
             </div>
           </div>
 
           <div>
-            <label className="section-title mb-1.5 block">API Token ID</label>
-            <input type="text" value={tokenId} onChange={(e) => setTokenId(e.target.value)} placeholder="user@pam!mytoken" className={inputClass} />
+            <label htmlFor="tokenId" className="section-title mb-1.5 block">API Token ID</label>
+            <input type="text" id="tokenId" value={tokenId} onChange={(e) => setTokenId(e.target.value)} placeholder="user@pam!mytoken" className={inputClass} />
           </div>
 
           <div>
-            <label className="section-title mb-1.5 block">Token Secret</label>
-            <input type="password" value={tokenSecret} onChange={(e) => setTokenSecret(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className={inputClass} />
+            <label htmlFor="tokenSecret" className="section-title mb-1.5 block">Token Secret</label>
+            <input type="password" id="tokenSecret" value={tokenSecret} onChange={(e) => setTokenSecret(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className={inputClass} />
           </div>
 
           {error && (
@@ -224,7 +221,7 @@ function ConnectionScreen({ onConnect, loading, error }) {
               {loading ? <RefreshCw size={16} className="animate-spin" /> : <Power size={16} />}
               {loading ? "Connexion…" : "Connecter"}
             </button>
-            <button onClick={() => onConnect({ demo: true })}
+            <button disabled={loading} onClick={() => onConnect({ demo: true })}
               className="px-5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-800 font-display font-semibold py-2.5 rounded-lg transition-all text-sm">
               Démo
             </button>
@@ -246,7 +243,7 @@ function ConnectionScreen({ onConnect, loading, error }) {
 
 // ── Main Dashboard ──────────────────────────────────────────
 
-function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
+function Dashboard({ data, onRefresh, onDisconnect, refreshing, error, demo }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [nodeFilter, setNodeFilter] = useState("all");
@@ -315,15 +312,15 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
   };
 
   const SortHeader = ({ col, children, className = "" }) => (
-    <th onClick={() => handleSort(col)}
+    <th aria-sort={sortKey === col ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
       className={`text-left px-4 py-3 section-title cursor-pointer select-none hover:text-slate-600 transition-colors group ${className}`}>
-      <span className="inline-flex items-center gap-1">
+      <button type="button" onClick={() => handleSort(col)} className="inline-flex items-center gap-1">
         {children}
         {sortKey === col
           ? (sortDir === "asc" ? <ChevronUp size={12} className="text-emerald-500" /> : <ChevronDown size={12} className="text-emerald-500" />)
           : <ArrowUpDown size={10} className="text-slate-300 group-hover:text-slate-400 transition-colors" />
         }
-      </span>
+      </button>
     </th>
   );
 
@@ -337,13 +334,14 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
   const tabs = [
     { id: "inventory", label: "Inventaire", icon: Layers },
     { id: "analytics", label: "Analytique", icon: BarChart3 },
+    { id: "migration", label: "Migration", icon: Network },
   ];
 
   return (
     <div className="min-h-screen">
       {/* ── Top Bar ─────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
-        <div className="max-w-[1440px] mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap gap-3 items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center">
               <Server size={16} className="text-emerald-600" strokeWidth={2} />
@@ -373,7 +371,10 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
         </div>
       </header>
 
-      <main className="max-w-[1440px] mx-auto px-6 py-6 space-y-6 animate-fade-in">
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 space-y-6 animate-fade-in">
+        {demo && <div className="notice">Mode démo · Données fictives pour explorer l’analyse et préparer un exemple de plan.</div>}
+        {error && <div role="alert" className="notice notice-error">Échec du rafraîchissement : {error}. Le dernier inventaire reste affiché.</div>}
+        {data.warnings?.length > 0 && <div role="status" className="notice">Inventaire partiel : {data.warnings.length} collecte(s) incomplète(s). <details><summary>Voir les limites de collecte</summary><ul className="list-disc pl-5 mt-2">{data.warnings.map((warning, i) => <li key={i}>{warning}</li>)}</ul></details></div>}
         {/* ── KPI Row ──────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <KPICard icon={Monitor} label="Machines virtuelles" value={`${running.length} / ${realVms.length}`} sub={`${realVms.length - running.length} arrêtée(s)`} color="text-emerald-600" tint="bg-emerald-50" delay="animate-stagger-1" />
@@ -438,6 +439,8 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
           ))}
         </div>
 
+        <div hidden={activeTab !== "migration"}><MigrationPlanner data={data} demo={demo} /></div>
+
         {/* ── Inventory Tab ────────────────────────────── */}
         {activeTab === "inventory" && (
           <div className="space-y-4">
@@ -445,16 +448,16 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative flex-1 min-w-[240px]">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                <input aria-label="Rechercher dans l’inventaire" type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Rechercher par nom, OS, ID, tag…"
                   className="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3.5 py-2 text-slate-700 placeholder-slate-400 text-xs font-display focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all" />
               </div>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectClass} style={selectChevron}>
+              <select aria-label="Filtrer par état" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={selectClass} style={selectChevron}>
                 <option value="all">Tous les états</option>
                 <option value="running">Running</option>
                 <option value="stopped">Stopped</option>
               </select>
-              <select value={nodeFilter} onChange={(e) => setNodeFilter(e.target.value)} className={selectClass} style={selectChevron}>
+              <select aria-label="Filtrer par nœud" value={nodeFilter} onChange={(e) => setNodeFilter(e.target.value)} className={selectClass} style={selectChevron}>
                 <option value="all">Tous les nœuds</option>
                 {nodes.map((n) => <option key={n.node} value={n.node}>{n.node}</option>)}
               </select>
@@ -487,6 +490,7 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
                       const osMeta = getOsMeta(vm.agent_os);
                       return (
                         <tr key={`${vm.node}-${vm.vmid}`}
+                          tabIndex={0} aria-label={`Détails de ${vm.name}`} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedVm(selectedVm?.vmid === vm.vmid ? null : vm); } }}
                           onClick={() => setSelectedVm(selectedVm?.vmid === vm.vmid ? null : vm)}
                           className={`border-t border-slate-100 cursor-pointer transition-colors ${
                             vm.template ? "opacity-50" : ""
@@ -499,7 +503,7 @@ function Dashboard({ data, onRefresh, onDisconnect, refreshing }) {
                             </div>
                             {vm.tags && (
                               <div className="flex gap-1 mt-1 flex-wrap">
-                                {vm.tags.split(",").map((t) => (
+                                {vm.tags.split(/[;,]/).map((t) => (
                                   <span key={t} className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">{t}</span>
                                 ))}
                               </div>
@@ -741,15 +745,17 @@ export default function App() {
   }, [data]);
 
   if (!data) {
-    return <ConnectionScreen onConnect={fetchInventory} loading={loading} error={error} />;
+    return <><div className="theme-bar"><ThemeControl /></div><ConnectionScreen onConnect={fetchInventory} loading={loading} error={error} /></>;
   }
 
   return (
-    <Dashboard
+    <><div className="theme-bar"><ThemeControl /></div><Dashboard
       data={data}
+      error={error}
+      demo={creds?.demo}
       onRefresh={() => fetchInventory(creds)}
       onDisconnect={() => { setData(null); setCreds(null); setError(null); }}
       refreshing={refreshing}
-    />
+    /></>
   );
 }
